@@ -1,0 +1,32 @@
+column_number,column_names,column_descriptions,column_type
+1,Date,yyyy-mm-dd,date
+2,daily_median_airtemp_interp_degC,daily median of air temperature in degrees Celsius,feature
+3,flag_daily_median_airtemp_interp_degC,flag for air temperature where TRUE indicates interpolated value,flag
+4,daily_median_swr_interp_Wm2,daily median of shortwave radiation in Watts per meter squared,feature
+5,flag_daily_median_swr_interp_Wm2,flag for shortwave radiation where TRUE indicates interpolated value,flag
+6,daily_median_inflow_interp_cms,daily median of stream inflow into reservoir in cubic meters per second,feature
+7,flag_daily_median_inflow_interp_cms,flag for inflow where TRUE indicates interpolated value,flag
+8,daily_median_watertemp_interp_degC,daily median of water temperature measured by EXO sonde at a depth of 1.6 m in degrees Celsius,feature
+9,flag_daily_median_watertemp_interp_degC,flag for EXO water temperature where TRUE indicates interpolated value,flag
+10,daily_median_srp_interp_ugL,daily median of soluble reactive phosphorus at 1.6 m depth in micrograms per liter,feature
+11,flag_daily_median_srp_interp_ugL,flag for SRP where TRUE indicates interpolated value,flag
+12,daily_median_din_interp_ugL,daily median of dissolved inorganic nitrogen at 1.6 m depth in micrograms per liter,feature
+13,flag_daily_median_din_interp_ugL,flag for DIN where TRUE indicates interpolated value,flag
+14,daily_median_inflow_srp_interp_ugL,daily median of soluble reactive phosphorus in the inflow stream in micrograms per liter,feature
+15,flag_daily_median_inflow_srp_interp_ugL,flag for inflow SRP where TRUE indicates interpolated value,flag
+16,daily_median_inflow_din_interp_ugL,daily median of dissolved inorganic nitrogen in the inflow stream in micrograms per liter,feature
+17,flag_daily_median_inflow_din_interp_ugL,flag for inflow DIN where TRUE indicates interpolated value,flag
+18,daily_median_Secchi_interp_m,"daily median Secchi depth, a measure of water transparency, in meters",feature
+19,flag_daily_median_Secchi_interp_m,flag for Secchi depth where TRUE indicates interpolated value,flag
+20,daily_median_CTD_Temp_C,daily median of water temperature measured by CTD profiler at 1.6 m depth in degrees Celsius,feature
+21,flag_daily_median_CTD_Temp_C,flag for CTD water temperature where TRUE indicates interpolated value,flag
+22,daily_median_GreenAlgae_ugL,daily median of green algae biomass measured by FluoroProbe profiler at 1.6 m depth in micrograms per liter,feature
+23,flag_daily_median_GreenAlgae_ugL,flag for green algae biomass where TRUE indicates interpolated value,flag
+24,daily_median_Bluegreens_ugL,daily median of cyanobacteria biomass measured by FluoroProbe profiler at 1.6 m depth in micrograms per liter,feature
+25,flag_daily_median_Bluegreens_ugL,flag for cyanobacteria biomass where TRUE indicates interpolated value,flag
+26,daily_median_BrownAlgae_ugL,daily median of brown algae biomass measured by FluoroProbe profiler at 1.6 m depth in micrograms per liter,feature
+27,flag_daily_median_BrownAlgae_ugL,flag for brown algae biomass where TRUE indicates interpolated value,flag
+28,daily_median_TotalConcNoMixed_ugL,daily median of total phytoplankton biomass not including cryptophytes measured by FluoroProbe profiler at 1.6 m depth in micrograms per liter,feature
+29,flag_daily_median_TotalConcNoMixed_ugL,flag for total phytoplankton biomass where TRUE indicates interpolated value,flag
+30,daily_median_chla_interp_ugL,daily median of chlorophyll-a measured by the EXO sonde at a depth of 1.6 m in micrograms per liter,target
+31,flag_daily_median_chla_interp_ugL,flag for EXO chl-a where TRUE indicates interpolated value,flag
