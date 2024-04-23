@@ -244,26 +244,26 @@ class seq2seq(nn.Module):
         
         # wandb.init(project=project_name, name=run_name, config=config, save_code=save_code)
         # config= wandb.config
-        
-        n_epochs = config.epochs
+
+        n_epochs = config["epochs"]
         
         # initialize array of losses
         losses = np.full(n_epochs, np.nan)
         test_rmse = []
         train_rmse = []
         
-        n_batches = int(math.ceil(X_train.shape[0] / config.batch_size))
-        optimizer = optim.Adam(self.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
+        n_batches = int(math.ceil(X_train.shape[0] / config["batch_size"]))
+        optimizer = optim.Adam(self.parameters(), lr=config["learning_rate"], weight_decay=config["weight_decay"])
         criterion = nn.MSELoss()
-        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=config.max_lr, epochs=n_epochs, div_factor=config.div_factor, 
-                                                        pct_start=config.pct_start, anneal_strategy=config.anneal_strategy, final_div_factor=config.final_div_factor,
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=config["max_lr"], epochs=n_epochs, div_factor=config["div_factor"], 
+                                                        pct_start=config["pct_start"], anneal_strategy=config["anneal_strategy"], final_div_factor=config["final_div_factor"],
                                                         steps_per_epoch=n_batches, verbose=False)
-        early_stop = config.early_stop
-        early_stopper = EarlyStopping(thres=config.early_stop_thres, min_delta=config.early_stop_delta)
+        early_stop = config["early_stop"]
+        early_stopper = EarlyStopping(thres=config["early_stop_thres"], min_delta=config["early_stop_delta"])
         
         params = {
-                  'batch_size': config.batch_size,
-                  'shuffle': config.batch_shuffle
+                  'batch_size': config["batch_size"],
+                  'shuffle': config["batch_shuffle"]
                 }
         
         X_train, Y_train = X_train.to(self.device), Y_train.to(self.device)
@@ -288,7 +288,7 @@ class seq2seq(nn.Module):
                 num_no_tf = 0
                 # batch_test_loss = np.nan
                 
-                encoder_hidden = self.encoder.init_hidden(config.batch_size)
+                encoder_hidden = self.encoder.init_hidden(config["batch_size"])
 
                 for input_batch, target_batch in training_generator:
                    
@@ -359,10 +359,10 @@ class seq2seq(nn.Module):
                 losses[it] = batch_loss
 
                 # dynamic teacher forcing
-                if dynamic_tf and config.teacher_forcing_ratio > 0:
-                    config.teacher_forcing_ratio = config.teacher_forcing_ratio - 0.002
+                if dynamic_tf and config["teacher_forcing_ratio"] > 0:
+                    config["teacher_forcing_ratio"] = config["teacher_forcing_ratio"] - 0.002
 
-                if it % config.eval_freq == 0:
+                if it % config["eval_freq"] == 0:
                     test_eval_dict = self.evaluate_batch(X_test=X_test, Y_test=Y_test)
                     train_eval_dict = self.evaluate_batch(X_test=X_train, Y_test=Y_train)
 
