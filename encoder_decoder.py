@@ -215,9 +215,9 @@ class seq2seq(nn.Module):
                     Y_test,
                     target_len,
                     config,
-                    project_name,
-                    run_name,
-                    save_code,
+                    # project_name,
+                    # run_name,
+                    # save_code,
                     training_prediction='recursive', 
                     dynamic_tf=False):
 
@@ -242,8 +242,8 @@ class seq2seq(nn.Module):
         : return losses:                   array of loss function for each epoch
         '''
         
-        wandb.init(project=project_name, name=run_name, config=config, save_code=save_code)
-        config= wandb.config
+        # wandb.init(project=project_name, name=run_name, config=config, save_code=save_code)
+        # config= wandb.config
         
         n_epochs = config.epochs
         
@@ -276,7 +276,7 @@ class seq2seq(nn.Module):
         validation_set = Dataset(X_test, Y_test)
         validation_generator = torch.utils.data.DataLoader(validation_set, **params)
         
-        wandb.watch(self.encoder)
+        # wandb.watch(self.encoder)
         
         with trange(n_epochs) as tr:
             for it in tr:
@@ -383,13 +383,13 @@ class seq2seq(nn.Module):
                         }
                 # tr.set_postfix(loss="{0:.3e}".format(batch_loss))
                 tr.set_postfix(metrics)
-                wandb.log(metrics)
+                # wandb.log(metrics)
         
         test_eval_dict = self.evaluate_batch(X_test=X_test, Y_test=Y_test)
         train_eval_dict = self.evaluate_batch(X_test=X_train, Y_test=Y_train)
-        wandb.summary['test_rmse'] = test_eval_dict["rmse"].item()
-        wandb.summary['train_rmse'] = train_eval_dict["rmse"].item()
-        wandb.finish()
+        # wandb.summary['test_rmse'] = test_eval_dict["rmse"].item()
+        # wandb.summary['train_rmse'] = train_eval_dict["rmse"].item()
+        # wandb.finish()
         
         return losses, test_rmse, train_rmse
 
