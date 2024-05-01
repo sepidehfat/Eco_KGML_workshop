@@ -124,7 +124,8 @@ class Utils:
             start_y = self.stride * ii + self.input_window
             end_y = start_y + self.output_window
             Y[ii, :, :] = dfY.iloc[start_y:end_y, :]
-
+        X = torch.from_numpy(X).type(torch.Tensor)
+        Y = torch.from_numpy(Y).type(torch.Tensor)
         return X, Y
    
 
