@@ -289,10 +289,16 @@ class Utils:
                 table.loc[r, k] = pred[i-(r-1)][r-1].cpu().numpy()
         return table
             
-    def predictionTable(self, df, pred_df, gt_values=None, plot=True):
+    def predictionTable(self, df, eval_dict, plot=True):
         '''
         Create the prediction table
         '''
+        gt = eval_dict['y_true']
+        gt_df = pd.DataFrame(gt.cpu().numpy()[:,:,0])
+        gt_values = np.append(gt_df[0].values, gt_df.iloc[-1,1:]) # ground-truth values for train data
+
+        pred_df = eval_dict['y_pred'] # model predicted values for train data
+
         pred_table = np.zeros((self.output_window, df.shape[0] - self.input_window))
         pred_table = pd.DataFrame(pred_table)
         pred_table.columns = df[self.input_window:].Date.values
@@ -309,12 +315,41 @@ class Utils:
 
         return pred_table
 
-    def plotTable(self, plot_df, plot_gt, T):
+    # def plotTable(self, plot_df, plot_gt, T):
+    #     '''
+    #     Plot the prediction table
+    #     '''
+    #     x_plot = plot_df.columns
+    #     fig,ax = plt.subplots()
+        
+    #     fig.set_figheight(5)
+    #     fig.set_figwidth(20)
+        
+    #     ax.grid(visible=True, alpha=0.2)
+        
+    #     for t in T:
+    #         y_axis = plot_df.loc[t,:].values
+    #         ax.plot(x_plot, y_axis, linestyle='--', label='T+'+str(t))
+        
+    #     ax.plot(x_plot, plot_gt, linestyle='--', label='Ground-truth')
+    #     ax.set_xlabel('Timeline')
+    #     ax.set_ylabel('Chlorophyll T+n predictions')
+            
+    #     every_nth = 20
+    #     for n, label in enumerate(ax.xaxis.get_ticklabels()):
+    #         if n % every_nth != 0:
+    #             label.set_visible(False)
+
+    #     ax.set_xticklabels(x_plot, rotation=90)
+    #     plt.legend()
+
+    def plot_predictions(self, df, eval_dict, T):
         '''
         Plot the prediction table
         '''
+        train_T_pred_table, plot_df, plot_gt = self.predictionTable(df, eval_dict)
+
         x_plot = plot_df.columns
-        print(x_plot)
         fig,ax = plt.subplots()
         
         fig.set_figheight(5)
@@ -354,3 +389,47 @@ class Utils:
         
         rmse = loss**0.5
         return rmse
+
+    def plot_RMSE_epochs(self, test_rmse, train_rmse):
+        plt.figure(figsize=(5, 5))  # Adjusted figure size and dpi for better quality
+        plt.plot(train_rmse, lw=2.0, label='Train RMSE', color='blue')  # Added color for better readability
+        plt.plot(test_rmse, lw=2.0, label='Test RMSE', color='orange')  # Added color for better readability
+  
+        # Set x-axis ticks with one stride
+        plt.xticks(range(0, len(train_rmse), 1))
+  
+        # plt.yscale("log")
+        plt.grid(True, which="both", linestyle='--', linewidth=0.5, alpha=0.5)  # Changed grid format for clarity
+        plt.xlabel('Epochs')
+        plt.ylabel('Root Mean Squared Error (RMSE)')
+        plt.title('Train and Test RMSE over Epochs')  # Adjusted title for clarity
+        plt.legend()
+        plt.tight_layout()  # Adjust layout for better spacing
+        plt.show()
+
+    def calculate_RMSE_horizon(self, df, eval_dict, T):
+        T_pred_table, plot_df, plot_gt = self.predictionTable(df, eval_dict)
+        gt = eval_dict['y_true']
+        gt_df = pd.DataFrame(gt.cpu().numpy()[:,:,0])
+        gt_values = np.append(gt_df[0].values, gt_df.iloc[-1,1:]) # ground-truth values for train data
+        gt_values = np.append(gt_df[0].values, gt_df.iloc[-1,1:]) # ground-truth values for train data
+        rmse_values = []
+        for i in range(self.output_window):
+            rmse_values.append(self.compute_rmse(i, T_pred_table, gt_values))
+        rmse_values = pd.DataFrame(rmse_values, columns=['RMSE'], index=range(1,self.output_window+1))
+        return rmse_values
+
+    def plot_RMSE_horizon(self, train_rmse_values, test_rmse_values, T):
+        ffig, ax = plt.subplots(figsize=(5, 5))
+        ax.plot(range(1, T+1), train_rmse_values, label='train RMSE')
+        ax.plot(range(1, T+1), test_rmse_values, label='test RMSE')
+
+        plt.xticks([i for i in range(1, T, 1)])
+        ax.grid(visible=True, alpha=0.5)
+
+        ax.set_xlabel('T+n Horizon Window')
+        ax.set_ylabel('RMSE')
+        ax.set_title('RMSE for train and test')
+        ax.legend()
+        plt.tight_layout()
+        plt.show()
