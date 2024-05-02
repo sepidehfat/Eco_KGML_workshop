@@ -359,3 +359,19 @@ class Utils:
         
         rmse = loss**0.5
         return rmse
+    def plot_RMSE_curves(test_rmse, train_rmse):
+          plt.figure(figsize=(5, 5))  # Adjusted figure size and dpi for better quality
+          plt.plot(train_rmse, lw=2.0, label='Train RMSE', color='blue')  # Added color for better readability
+          plt.plot(test_rmse, lw=2.0, label='Test RMSE', color='orange')  # Added color for better readability
+    
+          # Set x-axis ticks with one stride
+          plt.xticks(range(0, len(train_rmse), 1))
+    
+          # plt.yscale("log")
+          plt.grid(True, which="both", linestyle='--', linewidth=0.5, alpha=0.5)  # Changed grid format for clarity
+          plt.xlabel('Epochs')
+          plt.ylabel('Root Mean Squared Error (RMSE)')
+          plt.title('Train and Test RMSE over Epochs')  # Adjusted title for clarity
+          plt.legend()
+          plt.tight_layout()  # Adjust layout for better spacing
+          plt.show()
