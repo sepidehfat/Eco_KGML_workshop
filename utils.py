@@ -364,7 +364,7 @@ class Utils:
         ax.plot(x_plot, plot_gt, linestyle='--', label='Ground-truth')
         ax.set_xlabel('Timeline')
         ax.set_ylabel('Chlorophyll T+n predictions')
-        ax.title('Clorophyll-a Prediction Performance')
+        plt.title('Clorophyll-a Prediction Performance')
         every_nth = 20
         for n, label in enumerate(ax.xaxis.get_ticklabels()):
             if n % every_nth != 0:
