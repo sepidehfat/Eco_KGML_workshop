@@ -359,7 +359,7 @@ class Utils:
         
         rmse = loss**0.5
         return rmse
-    def plot_RMSE_curves(test_rmse, train_rmse):
+    def plot_RMSE_curves(self, test_rmse, train_rmse):
           plt.figure(figsize=(5, 5))  # Adjusted figure size and dpi for better quality
           plt.plot(train_rmse, lw=2.0, label='Train RMSE', color='blue')  # Added color for better readability
           plt.plot(test_rmse, lw=2.0, label='Test RMSE', color='orange')  # Added color for better readability
