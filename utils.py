@@ -315,10 +315,39 @@ class Utils:
 
         return pred_table
 
-    def plotTable(self, plot_df, plot_gt, T):
+    # def plotTable(self, plot_df, plot_gt, T):
+    #     '''
+    #     Plot the prediction table
+    #     '''
+    #     x_plot = plot_df.columns
+    #     fig,ax = plt.subplots()
+        
+    #     fig.set_figheight(5)
+    #     fig.set_figwidth(20)
+        
+    #     ax.grid(visible=True, alpha=0.2)
+        
+    #     for t in T:
+    #         y_axis = plot_df.loc[t,:].values
+    #         ax.plot(x_plot, y_axis, linestyle='--', label='T+'+str(t))
+        
+    #     ax.plot(x_plot, plot_gt, linestyle='--', label='Ground-truth')
+    #     ax.set_xlabel('Timeline')
+    #     ax.set_ylabel('Chlorophyll T+n predictions')
+            
+    #     every_nth = 20
+    #     for n, label in enumerate(ax.xaxis.get_ticklabels()):
+    #         if n % every_nth != 0:
+    #             label.set_visible(False)
+
+    #     ax.set_xticklabels(x_plot, rotation=90)
+    #     plt.legend()
+    def plot_predictions(self, df, eval_dict, T):
         '''
         Plot the prediction table
         '''
+        train_T_pred_table, plot_df, plot_gt = self.predictionTable(df, eval_dict)
+
         x_plot = plot_df.columns
         fig,ax = plt.subplots()
         
