@@ -407,7 +407,7 @@ class Utils:
         plt.tight_layout()  # Adjust layout for better spacing
         plt.show()
 
-    def calculate_RMSE_horizon(self, df, eval_dict, T):
+    def calculate_RMSE_horizon(self, df, eval_dict):
         T_pred_table, plot_df, plot_gt = self.predictionTable(df, eval_dict)
         gt = eval_dict['y_true']
         gt_df = pd.DataFrame(gt.cpu().numpy()[:,:,0])
