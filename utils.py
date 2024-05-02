@@ -320,7 +320,6 @@ class Utils:
         Plot the prediction table
         '''
         x_plot = plot_df.columns
-        print(x_plot)
         fig,ax = plt.subplots()
         
         fig.set_figheight(5)
