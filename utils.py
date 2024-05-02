@@ -289,10 +289,16 @@ class Utils:
                 table.loc[r, k] = pred[i-(r-1)][r-1].cpu().numpy()
         return table
             
-    def predictionTable(self, df, pred_df, gt_values=None, plot=True):
+    def predictionTable(self, df, eval_dict, plot=True):
         '''
         Create the prediction table
         '''
+        gt = eval_dict['y_true']
+        gt_df = pd.DataFrame(gt.cpu().numpy()[:,:,0])
+        gt_values = np.append(gt_df[0].values, gt_df.iloc[-1,1:]) # ground-truth values for train data
+
+        pred_df = eval_dict['y_pred'] # model predicted values for train data
+
         pred_table = np.zeros((self.output_window, df.shape[0] - self.input_window))
         pred_table = pd.DataFrame(pred_table)
         pred_table.columns = df[self.input_window:].Date.values
