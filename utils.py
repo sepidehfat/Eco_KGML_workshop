@@ -420,7 +420,7 @@ class Utils:
         return rmse_values
 
     def plot_RMSE_horizon(self, train_rmse_values, test_rmse_values, T):
-        ffig, ax = plt.subplots(figsize=(5, 5))
+        fig, ax = plt.subplots(figsize=(5, 5))
         ax.plot(range(1, T+1), train_rmse_values, label='train RMSE')
         ax.plot(range(1, T+1), test_rmse_values, label='test RMSE')
 
