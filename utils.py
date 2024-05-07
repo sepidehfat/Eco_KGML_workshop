@@ -3,10 +3,73 @@ import torch
 import pandas as pd
 import random
 import matplotlib.pyplot as plt
+import os
 
+from encoder_decoder import seq2seq
+
+def get_config():
+        config = {
+                "batch_size": 32,
+                "epochs": 100,
+                "learning_rate": 0.0001,
+                "eval_freq": 1,
+                "batch_shuffle": True,
+                "dropout":0.01,
+                "num_layers": 1,
+                "hidden_feature_size": 64,
+                "model_type": 'LSTM',
+                "teacher_forcing_ratio": 0.0,
+                "max_lr": 5e-4,
+                "div_factor": 500,
+                "pct_start": 0.05,
+                "anneal_strategy": 'cos',
+                "final_div_factor": 10000.0,
+                "dataset": 'LSTM_dataset.csv',
+                "split_ratio":0.6,
+                "input_window":14,
+                "output_window":7,
+                "early_stop_thres":5,
+                "early_stop_delta":0.5,
+                "early_stop":False,
+                "weight_decay":0.05,
+                "training_prediction":'recursive'
+            }        
+        return config
+    
+def run_all(params, horizon_range=[1,7]):
+    
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
+
+    path = './Eco_KGML_workshop'
+    file_name = 'LSTM_dataset.csv'
+    metadata = 'LSTM_dataset_column_key.csv'
+
+    # Read metadata file
+    dx = pd.read_csv(os.path.join(path, metadata))
+
+    # Extract all col names from Metadata
+    feature_cols = dx[dx['column_type']=='feature']['column_names'].tolist()  # feature colums represent the input drivers
+    target_cols = dx[dx['column_type']=='target']['column_names'].tolist()   # target column represent the chlorophyll values
+    date_col = dx[dx['column_type']=='date']['column_names'].tolist()[0]    # date column stores the date timeline
+
+    df = pd.read_csv(os.path.join(path, file_name))
+                     
+    feature_cols += target_cols
+ 
+    utils = Utils(num_features=len(feature_cols), inp_cols=feature_cols, target_cols=target_cols, date_col=date_col,
+                  input_window=params['input_window'], output_window=params['output_window'], num_out_features=1, stride=1, device=device)
+    
+    utils.run_all_fn(df=df,
+                     params=params,
+                     horizon_range=horizon_range)
+                     
+                     
 class Utils:
     
-    def __init__(self, num_features, inp_cols, target_cols, date_col, input_window, output_window, num_out_features, stride=1):
+    def __init__(self, num_features, inp_cols, target_cols, date_col, input_window, output_window, num_out_features, device, stride=1):
         self.num_features = num_features
         self.inp_cols = inp_cols
         self.target_cols = target_cols
@@ -17,6 +80,7 @@ class Utils:
         self.stride = stride
         self.y_mean = None
         self.y_std = None
+        self.device = device
     
     def train_test_split(self, df, split_type='ratio', split_date=None, split_ratio=0.0):
         '''
@@ -43,24 +107,74 @@ class Utils:
             df_test = df.iloc[indx_test]
 
         return df_train.reset_index(drop='true'), df_test.reset_index(drop='true')
-
-#     def normalize(self, df):
-#         '''
-#         Normalize data
-#         '''
-        
-#         # compute mean and std of target variable - to be used for unnormalizing
-#         self.y_std = df[self.target_cols].std()[0]
-#         self.y_mean = df[self.target_cols].mean()[0]
-        
-#         if len(set(self.inp_cols).intersection(self.target_cols))==0:
-#             df[self.inp_cols] = (df[self.inp_cols]-df[self.inp_cols].mean())/df[self.inp_cols].std()
-#             df[self.target_cols] = (df[self.target_cols]-self.y_mean)/self.y_std
-#         else:
-#             df[self.inp_cols] = (df[self.inp_cols]-df[self.inp_cols].mean())/df[self.inp_cols].std()
-            
-#         return df
     
+    def run_all_fn(self, 
+                   df,
+                   params,
+                   horizon_range=[1,7]):
+        
+        config = get_config()
+        '''
+        update config
+        '''
+        config['epochs']=params['epochs']
+        config['input_window']=params['input_window']
+        config['output_window']=params['output_window']
+        config['weight_decay']=params['weight_decay']
+        config['split_ratio']=params['split_ratio']
+        
+        print("Performing train-test split ", end="...")
+        df_train, df_test = self.train_test_split(df, split_ratio=config['split_ratio'])
+        print("DONE\n")
+        print("Normalizing the data ", end="...")
+        df_train = self.normalize(df_train)
+        df_test = self.normalize(df_test, use_stat=True)
+        print("DONE\n")
+        print("Creating windows ", end="...")
+        X_train, Y_train = self.windowed_dataset(df_train)
+        X_test, Y_test = self.windowed_dataset(df_test)
+        print("DONE\n")
+        
+        print("Training the model ", end="...")
+        model = seq2seq(input_size = X_train.shape[2],
+                        hidden_size = config['hidden_feature_size'],
+                        output_size=1,
+                        model_type=config['model_type'],
+                        num_layers = config['num_layers'],
+                        utils=self,
+                        dropout=config['dropout'],
+                        device=self.device
+                       )
+
+        loss, test_rmse, train_rmse = model.train_model(X_train,
+                                                        Y_train,
+                                                        X_test,
+                                                        Y_test,
+                                                        target_len = config['output_window'],
+                                                        config = config,
+                                                        training_prediction = config['training_prediction'])
+        print("DONE\n")
+        
+        self.plot_RMSE_epochs(test_rmse, train_rmse)
+        
+        train_eval_metrics = model.evaluate_batch(X_train.to(self.device), Y_train.to(self.device))
+        test_eval_metrics = model.evaluate_batch(X_test.to(self.device), Y_test.to(self.device))
+        
+        print("Visualizing the predictions on train data ...\n")
+        self.plot_predictions(df_train, train_eval_metrics, horizon_range, split='Train')
+        plt.show()
+        
+        print("Visualizing the predictions on test data ...\n")
+        self.plot_predictions(df_test, test_eval_metrics, horizon_range, split='Test')
+        plt.show()
+        
+        print("Visualizing the change in RMSE across increasing horizon window ...\n")
+
+        train_rmse_values = self.calculate_RMSE_horizon(df_train, train_eval_metrics)
+        test_rmse_values = self.calculate_RMSE_horizon(df_test, test_eval_metrics)
+        self.plot_RMSE_horizon(train_rmse_values, test_rmse_values, config['output_window'])
+        plt.show()
+        
     def normalize(self, df, use_stat=False):
         '''
         Normalize data
@@ -343,7 +457,7 @@ class Utils:
     #     ax.set_xticklabels(x_plot, rotation=90)
     #     plt.legend()
 
-    def plot_predictions(self, df, eval_dict, T):
+    def plot_predictions(self, df, eval_dict, T, split='Train'):
         '''
         Plot the prediction table
         '''
@@ -364,7 +478,7 @@ class Utils:
         ax.plot(x_plot, plot_gt, linestyle='--', label='Ground-truth')
         ax.set_xlabel('Timeline')
         ax.set_ylabel('Chlorophyll T+n predictions')
-        plt.title('Clorophyll-a Prediction Performance')
+        plt.title(f'Clorophyll-a Prediction Performance on {split} data')
         every_nth = 20
         for n, label in enumerate(ax.xaxis.get_ticklabels()):
             if n % every_nth != 0:
@@ -391,12 +505,18 @@ class Utils:
         return rmse
 
     def plot_RMSE_epochs(self, test_rmse, train_rmse):
-        plt.figure(figsize=(5, 5))  # Adjusted figure size and dpi for better quality
+        plt.figure(figsize=(15, 5))  # Adjusted figure size and dpi for better quality
         plt.plot(train_rmse, lw=2.0, label='Train RMSE', color='blue')  # Added color for better readability
         plt.plot(test_rmse, lw=2.0, label='Test RMSE', color='orange')  # Added color for better readability
   
+        if len(train_rmse) > 200:
+            stride=10
+        elif len(train_rmse) >= 500:
+            stride=20
+        else:
+            stride=1
         # Set x-axis ticks with one stride
-        plt.xticks(range(0, len(train_rmse), 1))
+        plt.xticks(range(0, len(train_rmse), stride), rotation=90)
   
         # plt.yscale("log")
         plt.grid(True, which="both", linestyle='--', linewidth=0.5, alpha=0.5)  # Changed grid format for clarity
