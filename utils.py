@@ -60,24 +60,25 @@ def run_all(params, horizon_range=[1,7]):
     feature_cols += target_cols
  
     utils = Utils(num_features=len(feature_cols), inp_cols=feature_cols, target_cols=target_cols, date_col=date_col,
-                  input_window=params['input_window'], output_window=params['output_window'], num_out_features=1, stride=1, device=device)
+                  num_out_features=1, device=device)
     
     utils.run_all_fn(df=df,
-                     params=params,
-                     horizon_range=horizon_range)
+                    params=params,
+                    horizon_range=horizon_range,
+                    stride=1)
                      
                      
 class Utils:
     
-    def __init__(self, num_features, inp_cols, target_cols, date_col, input_window, output_window, num_out_features, device, stride=1):
+    def __init__(self, num_features, inp_cols, target_cols, date_col, num_out_features, device):
         self.num_features = num_features
         self.inp_cols = inp_cols
         self.target_cols = target_cols
         self.date_col = date_col
-        self.input_window = input_window
-        self.output_window = output_window
+        self.input_window = None
+        self.output_window = None
         self.num_out_features = num_out_features
-        self.stride = stride
+        self.stride = None
         self.y_mean = None
         self.y_std = None
         self.device = device
@@ -111,12 +112,16 @@ class Utils:
     def run_all_fn(self, 
                    df,
                    params,
-                   horizon_range=[1,7]):
+                   horizon_range=[1,7],
+                   stride=1):
         
         config = get_config()
         '''
         update config
         '''
+        input_window=params['input_window']
+        output_window=params['output_window']
+        
         config['epochs']=params['epochs']
         config['input_window']=params['input_window']
         config['output_window']=params['output_window']
@@ -131,8 +136,8 @@ class Utils:
         df_test = self.normalize(df_test, use_stat=True)
         print("DONE\n")
         print("Creating windows ", end="...")
-        X_train, Y_train = self.windowed_dataset(df_train)
-        X_test, Y_test = self.windowed_dataset(df_test)
+        X_train, Y_train = self.windowed_dataset(df_train, input_window, output_window, stride)
+        X_test, Y_test = self.windowed_dataset(df_test, input_window, output_window, stride)
         print("DONE\n")
         
         print("Training the model ", end="...")
@@ -205,7 +210,7 @@ class Utils:
             
         return df
         
-    def windowed_dataset(self, df):
+    def windowed_dataset(self, df, input_window, output_window, stride):
         '''
         create a windowed dataset
     
@@ -217,7 +222,9 @@ class Utils:
         : return X, Y:            arrays with correct dimensions for LSTM
         :                         (i.e., [input/output window size # examples, # features])
         '''
-
+        self.input_window = input_window
+        self.output_window = output_window
+        self.stride = stride
         L = df.shape[0]
         num_samples = (L - self.input_window - self.output_window) // self.stride + 1
     
